@@ -1,0 +1,59 @@
+version: "3"
+services:
+  vote:
+    build: ./vote
+    command: python app.py
+    container_name: votingapp
+    volumes:
+     - ./vote:/app
+    ports:
+      - "5000:80"
+    networks:
+      - front-end
+      - back-end
+
+  result:
+    build: ./result
+    command: nodemon server.js
+    container_name: resultsapp
+    volumes:
+      - ./result:/app
+    ports:
+      - "5001:80"
+      - "5858:5858"
+    networks:
+      - front-end
+      - back-end
+
+  worker:
+    build:
+      context: ./worker
+    depends_on:
+      - "redisdb"
+      - "postgresqldb"
+    networks:
+      - back-end
+
+  redisdb:
+    image: redis:alpine
+    container_name: redis
+    ports: ["6379"]
+    networks:
+      - back-end
+
+  postgresqldb:
+    image: postgres:9.4
+    container_name: db
+    volumes:
+      - "postgresqlvol:/var/lib/postgresql/data"
+    networks:
+      - back-end
+
+volumes:
+  postgresqlvol:
+
+networks:
+  front-end:
+    driver: "bridge"
+  back-end:
+    driver: "bridge"
